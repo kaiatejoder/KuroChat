@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kurochat</title>
+    <link rel="icon" href="src/KuroChat.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Pantalla de Login -->
+    <div id="loginContainer" class="login-container">
+        <div class="login-box">
+            <img src="src/KuroChat.svg" alt="Kurochat" class="logo">
+            <h1>Kurochat</h1>
+            <p class="subtitle">Acceso Restringido</p>
+            <input
+                type="password"
+                id="passwordInput"
+                placeholder="Ingresa la contraseña"
+                autocomplete="off"
+            >
+            <button id="loginBtn">Ingresar</button>
+            <p id="attemptCounter" class="attempt-counter">Intentos restantes: 3</p>
+            <p id="hint" class="hint" style="display: none;"></p>
+        </div>
+    </div>
+
+    <!-- Pantalla de Chat -->
+    <div id="chatContainer" class="chat-container" style="display: none;">
+        <div class="chat-header">
+            <div class="header-title">
+                <img src="src/KuroChat.svg" alt="Kurochat" class="logo-small">
+                <h2>Kurochat</h2>
+            </div>
+            <button id="logoutBtn" class="logout-btn">Salir</button>
+        </div>
+
+        <div id="messagesArea" class="messages-area"></div>
+
+        <div class="input-area">
+            <input
+                type="text"
+                id="messageInput"
+                placeholder="Escribe un mensaje..."
+                autocomplete="off"
+            >
+            <button id="sendBtn">Enviar</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
