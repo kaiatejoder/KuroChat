@@ -103,6 +103,13 @@ async function handleSendMessage() {
             messageInput.value = '';
             messageInput.focus();
             scrollToBottom();
+
+            if (!document.hasFocus()) {
+                showNotification('Kurochat', {
+                    body: 'Mensaje enviado',
+                    tag: 'kurochat-message'
+                });
+            }
         }
     } catch (error) {
         console.error('Error enviando mensaje:', error);
@@ -137,6 +144,16 @@ async function loadMessages() {
         messagesArea.innerHTML = '';
         messages.forEach((msg) => renderMessage(msg));
         scrollToBottom();
+
+        if (messages.length > 0) {
+            const lastMessage = messages[messages.length - 1];
+            if (lastMessage.user !== currentUser) {
+                showNotification('Kurochat', {
+                    body: lastMessage.text,
+                    tag: 'kurochat-message'
+                });
+            }
+        }
     } catch (error) {
         console.error('Error cargando mensajes:', error);
         alert('Error al cargar los mensajes. Verifica que el servidor esté corriendo.');
@@ -149,7 +166,34 @@ function scrollToBottom() {
     }, 0);
 }
 
+// NOTIFICACIONES
+function requestNotificationPermission() {
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
+}
+
+function showNotification(title, options = {}) {
+    if ('Notification' in window && Notification.permission === 'granted') {
+        const defaultOptions = {
+            icon: 'src/KuroChat.svg',
+            badge: 'src/KuroChat.svg',
+            ...options
+        };
+        new Notification(title, defaultOptions);
+    }
+}
+
+// SERVICE WORKER
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js')
+            .catch((error) => console.log('SW registration failed:', error));
+    });
+}
+
 // INICIALIZACIÓN
 window.addEventListener('load', () => {
     passwordInput.focus();
+    requestNotificationPermission();
 });
