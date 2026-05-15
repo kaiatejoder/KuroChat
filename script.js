@@ -1,7 +1,9 @@
 const PASSWORD = 'Kayla';
 const HINT = '¿Quién soy?';
 const MAX_ATTEMPTS = 3;
-const STORAGE_KEY = 'chatMessages';
+const API_URL = window.location.hostname === 'localhost'
+    ? 'http://localhost:8080/api/messages'
+    : '/api/messages';
 
 let attempts = MAX_ATTEMPTS;
 let isLoggedIn = false;
@@ -76,56 +78,69 @@ function handleLogout() {
 }
 
 // FUNCIONES DE CHAT
-function handleSendMessage() {
+async function handleSendMessage() {
     const text = messageInput.value.trim();
 
     if (text === '') return;
 
-    const message = {
-        id: Date.now(),
+    const messageData = {
         user: currentUser,
-        text: text,
-        timestamp: new Date().toLocaleTimeString('es-ES', {
-            hour: '2-digit',
-            minute: '2-digit'
-        })
+        text: text
     };
 
-    let messages = loadMessagesArray();
-    messages.push(message);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(messageData)
+        });
 
-    renderMessage(message);
-    messageInput.value = '';
-    messageInput.focus();
-    scrollToBottom();
+        if (response.ok) {
+            const message = await response.json();
+            renderMessage(message);
+            messageInput.value = '';
+            messageInput.focus();
+            scrollToBottom();
+        }
+    } catch (error) {
+        console.error('Error enviando mensaje:', error);
+        alert('Error al enviar el mensaje. Verifica que el servidor esté corriendo.');
+    }
 }
 
 function renderMessage(message) {
     const messageEl = document.createElement('div');
     messageEl.className = `message ${message.user === 'yo' ? 'own' : 'other'}`;
 
+    const time = new Date(message.timestamp).toLocaleTimeString('es-ES', {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+
     const bubbleEl = document.createElement('div');
     bubbleEl.className = 'message-bubble';
     bubbleEl.innerHTML = `
         ${message.text}
-        <span class="message-time">${message.timestamp}</span>
+        <span class="message-time">${time}</span>
     `;
 
     messageEl.appendChild(bubbleEl);
     messagesArea.appendChild(messageEl);
 }
 
-function loadMessages() {
-    const messages = loadMessagesArray();
-    messagesArea.innerHTML = '';
-    messages.forEach((msg) => renderMessage(msg));
-    scrollToBottom();
-}
-
-function loadMessagesArray() {
-    const data = localStorage.getItem(STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
+async function loadMessages() {
+    try {
+        const response = await fetch(API_URL);
+        const messages = await response.json();
+        messagesArea.innerHTML = '';
+        messages.forEach((msg) => renderMessage(msg));
+        scrollToBottom();
+    } catch (error) {
+        console.error('Error cargando mensajes:', error);
+        alert('Error al cargar los mensajes. Verifica que el servidor esté corriendo.');
+    }
 }
 
 function scrollToBottom() {
