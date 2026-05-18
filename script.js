@@ -16,6 +16,55 @@ let statusCheckInterval = null;
 let activityUpdateInterval = null;
 let localMessages = [];
 
+// MESSAGE LOGGING
+function addToLog(user, text) {
+    try {
+        let log = JSON.parse(localStorage.getItem('kurochat_log')) || [];
+        log.push({
+            timestamp: new Date().toISOString(),
+            user: user,
+            text: text
+        });
+        localStorage.setItem('kurochat_log', JSON.stringify(log));
+    } catch (error) {
+        console.error('Error adding to log:', error);
+    }
+}
+
+function downloadLog() {
+    try {
+        const log = JSON.parse(localStorage.getItem('kurochat_log')) || [];
+        let csv = 'Timestamp,User,Message\n';
+
+        log.forEach(entry => {
+            const timestamp = new Date(entry.timestamp).toLocaleString('es-ES');
+            const user = entry.user;
+            const text = `"${entry.text.replace(/"/g, '""')}"`;
+            csv += `${timestamp},${user},${text}\n`;
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `kurochat-log-${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+    } catch (error) {
+        console.error('Error downloading log:', error);
+        alert('Error descargando el log');
+    }
+}
+
+function clearLog() {
+    if (confirm('¿Estás seguro de que quieres limpiar el log?')) {
+        localStorage.removeItem('kurochat_log');
+        alert('Log limpiado');
+    }
+}
+
 // ELEMENTOS DOM
 const loginContainer = document.getElementById('loginContainer');
 const chatContainer = document.getElementById('chatContainer');
@@ -50,6 +99,12 @@ messageInput.addEventListener('keypress', (e) => {
 const refreshBtn = document.getElementById('refreshBtn');
 if (refreshBtn) {
     refreshBtn.addEventListener('click', refreshMessages);
+}
+
+// Download log button
+const downloadLogBtn = document.getElementById('downloadLogBtn');
+if (downloadLogBtn) {
+    downloadLogBtn.addEventListener('click', downloadLog);
 }
 
 // FUNCIONES DE LOGIN
@@ -152,6 +207,7 @@ async function handleSendMessage() {
             const message = await response.json();
             localMessages.push(message);
             saveLocalMessages();
+            addToLog(message.user, message.text);
             renderMessage(message);
             messageInput.value = '';
             messageInput.focus();
@@ -215,6 +271,11 @@ async function loadMessages() {
         // Merge server messages with local messages
         localMessages = messages.length > 0 ? messages : localMessages;
         saveLocalMessages();
+
+        // Add loaded messages to log
+        localMessages.forEach(msg => {
+            addToLog(msg.user, msg.text);
+        });
 
         renderAllMessages();
     } catch (error) {
