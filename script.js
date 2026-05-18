@@ -1,3 +1,8 @@
+import { inject } from '@vercel/analytics';
+
+// Initialize Vercel Analytics
+inject();
+
 const PASSWORD = 'Kayla';
 const HINT = '¿Quién soy?';
 const MAX_ATTEMPTS = 3;
