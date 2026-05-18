@@ -3,6 +3,14 @@
     {
       "source": "/api/messages",
       "destination": "/api/messages.js"
+    },
+    {
+      "source": "/api/status",
+      "destination": "/api/status.js"
+    },
+    {
+      "source": "/api/logs",
+      "destination": "/api/logs.js"
     }
   ],
   "env": {

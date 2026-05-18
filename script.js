@@ -17,31 +17,32 @@ let activityUpdateInterval = null;
 let localMessages = [];
 
 // MESSAGE LOGGING
-function addToLog(user, text) {
+const LOGS_API_URL = window.location.hostname === 'localhost'
+    ? 'http://localhost:8080/api/logs'
+    : '/api/logs';
+
+async function addToLog(user, text) {
     try {
-        let log = JSON.parse(localStorage.getItem('kurochat_log')) || [];
-        log.push({
-            timestamp: new Date().toISOString(),
-            user: user,
-            text: text
+        await fetch(LOGS_API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                user: user,
+                text: text,
+                timestamp: new Date().toISOString()
+            })
         });
-        localStorage.setItem('kurochat_log', JSON.stringify(log));
     } catch (error) {
         console.error('Error adding to log:', error);
     }
 }
 
-function downloadLog() {
+async function downloadLog() {
     try {
-        const log = JSON.parse(localStorage.getItem('kurochat_log')) || [];
-        let csv = 'Timestamp,User,Message\n';
-
-        log.forEach(entry => {
-            const timestamp = new Date(entry.timestamp).toLocaleString('es-ES');
-            const user = entry.user;
-            const text = `"${entry.text.replace(/"/g, '""')}"`;
-            csv += `${timestamp},${user},${text}\n`;
-        });
+        const response = await fetch(LOGS_API_URL + '?format=csv');
+        const csv = await response.text();
 
         const blob = new Blob([csv], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
@@ -55,13 +56,6 @@ function downloadLog() {
     } catch (error) {
         console.error('Error downloading log:', error);
         alert('Error descargando el log');
-    }
-}
-
-function clearLog() {
-    if (confirm('¿Estás seguro de que quieres limpiar el log?')) {
-        localStorage.removeItem('kurochat_log');
-        alert('Log limpiado');
     }
 }
 
@@ -271,11 +265,6 @@ async function loadMessages() {
         // Merge server messages with local messages
         localMessages = messages.length > 0 ? messages : localMessages;
         saveLocalMessages();
-
-        // Add loaded messages to log
-        localMessages.forEach(msg => {
-            addToLog(msg.user, msg.text);
-        });
 
         renderAllMessages();
     } catch (error) {
