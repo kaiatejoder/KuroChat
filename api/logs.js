@@ -1,7 +1,6 @@
-// In-memory log storage for Vercel
-let activityLog = [];
+import { connectToDatabase } from './db.js';
 
-export default function handler(req, res) {
+export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST,PUT');
@@ -12,43 +11,49 @@ export default function handler(req, res) {
         return;
     }
 
-    if (req.method === 'GET') {
-        // Return all logs as CSV or JSON
-        const format = req.query.format || 'json';
+    try {
+        const client = await connectToDatabase();
+        const db = client.db('kurochat');
+        const logsCollection = db.collection('logs');
 
-        if (format === 'csv') {
-            let csv = 'Timestamp,User,Message\n';
-            activityLog.forEach(entry => {
-                const timestamp = new Date(entry.timestamp).toLocaleString('es-ES');
-                const user = entry.user;
-                const text = `"${entry.text.replace(/"/g, '""')}"`;
-                csv += `${timestamp},${user},${text}\n`;
-            });
-            res.setHeader('Content-Type', 'text/csv');
-            res.setHeader('Content-Disposition', 'attachment; filename="kurochat-log.csv"');
-            res.status(200).send(csv);
+        if (req.method === 'GET') {
+            const logs = await logsCollection.find({}).sort({ timestamp: 1 }).toArray();
+            const format = req.query.format || 'json';
+
+            if (format === 'csv') {
+                let csv = 'Timestamp,User,Message\n';
+                logs.forEach(entry => {
+                    const timestamp = new Date(entry.timestamp).toLocaleString('es-ES');
+                    const text = `"${entry.text.replace(/"/g, '""')}"`;
+                    csv += `${timestamp},${entry.user},${text}\n`;
+                });
+                res.setHeader('Content-Type', 'text/csv');
+                res.setHeader('Content-Disposition', 'attachment; filename="kurochat-log.csv"');
+                res.status(200).send(csv);
+            } else {
+                res.status(200).json(logs);
+            }
+        } else if (req.method === 'POST' || req.method === 'PUT') {
+            const { user, text, timestamp } = req.body;
+
+            if (!user || !text) {
+                return res.status(400).json({ error: 'Missing user or text' });
+            }
+
+            const entry = {
+                timestamp: timestamp || new Date().toISOString(),
+                user,
+                text,
+            };
+
+            await logsCollection.insertOne(entry);
+            const count = await logsCollection.countDocuments();
+            res.status(201).json({ success: true, totalLogs: count });
         } else {
-            res.status(200).json(activityLog);
+            res.status(405).json({ error: 'Method not allowed' });
         }
-    } else if (req.method === 'POST' || req.method === 'PUT') {
-        // Add new log entry
-        const { user, text, timestamp } = req.body;
-
-        if (!user || !text) {
-            return res.status(400).json({ error: 'Missing user or text' });
-        }
-
-        activityLog.push({
-            timestamp: timestamp || new Date().toISOString(),
-            user,
-            text
-        });
-
-        res.status(201).json({
-            success: true,
-            totalLogs: activityLog.length
-        });
-    } else {
-        res.status(405).json({ error: 'Method not allowed' });
+    } catch (error) {
+        console.error('Logs error:', error);
+        res.status(500).json({ error: 'Database connection failed' });
     }
 }
