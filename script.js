@@ -4,11 +4,16 @@ const MAX_ATTEMPTS = 3;
 const API_URL = window.location.hostname === 'localhost'
     ? 'http://localhost:8080/api/messages'
     : '/api/messages';
+const STATUS_API_URL = window.location.hostname === 'localhost'
+    ? 'http://localhost:8080/api/status'
+    : '/api/status';
 
 let attempts = MAX_ATTEMPTS;
 let isLoggedIn = false;
 let currentUser = 'yo';
 let pollInterval = null;
+let statusCheckInterval = null;
+let activityUpdateInterval = null;
 let localMessages = [];
 
 // ELEMENTOS DOM
@@ -22,6 +27,7 @@ const sendBtn = document.getElementById('sendBtn');
 const messagesArea = document.getElementById('messagesArea');
 const attemptCounter = document.getElementById('attemptCounter');
 const hint = document.getElementById('hint');
+const onlineStatus = document.getElementById('onlineStatus');
 
 // EVENT LISTENERS
 loginBtn.addEventListener('click', handleLogin);
@@ -52,6 +58,8 @@ function handleLogin() {
         loadLocalMessages();
         loadMessages();
         startPolling();
+        startActivityUpdates();
+        startStatusCheck();
         messageInput.focus();
     } else {
         attempts--;
@@ -74,6 +82,8 @@ function handleLogin() {
 function handleLogout() {
     isLoggedIn = false;
     stopPolling();
+    stopActivityUpdates();
+    stopStatusCheck();
     attempts = MAX_ATTEMPTS;
     passwordInput.value = '';
     passwordInput.style.borderColor = '#333';
@@ -116,6 +126,9 @@ async function handleSendMessage() {
             messageInput.value = '';
             messageInput.focus();
             scrollToBottom();
+
+            // Update activity when message is sent
+            updateActivity();
 
             if (!document.hasFocus()) {
                 showNotification('Kurochat', {
@@ -240,6 +253,87 @@ function stopPolling() {
     if (pollInterval) {
         clearInterval(pollInterval);
         pollInterval = null;
+    }
+}
+
+// Update user activity on server
+async function updateActivity() {
+    try {
+        await fetch(STATUS_API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ user: currentUser })
+        });
+    } catch (error) {
+        console.error('Error updating activity:', error);
+    }
+}
+
+// Check if other user is online
+async function checkOnlineStatus() {
+    try {
+        const response = await fetch(STATUS_API_URL);
+        if (response.ok) {
+            const status = await response.json();
+            const otherUserStatus = currentUser === 'yo' ? status.other : status.yo;
+
+            if (onlineStatus) {
+                if (otherUserStatus.online) {
+                    onlineStatus.classList.remove('offline');
+                    onlineStatus.classList.add('online');
+                    onlineStatus.querySelector('.online-text').textContent = 'Online';
+                } else {
+                    onlineStatus.classList.remove('online');
+                    onlineStatus.classList.add('offline');
+                    onlineStatus.querySelector('.online-text').textContent = 'Offline';
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error checking online status:', error);
+        if (onlineStatus) {
+            onlineStatus.classList.remove('online');
+            onlineStatus.classList.add('offline');
+        }
+    }
+}
+
+// Start activity updates (every 5 seconds)
+function startActivityUpdates() {
+    if (activityUpdateInterval) clearInterval(activityUpdateInterval);
+    updateActivity(); // Update immediately on login
+    activityUpdateInterval = setInterval(() => {
+        if (isLoggedIn) {
+            updateActivity();
+        }
+    }, 5000);
+}
+
+// Start checking online status (every 2 seconds)
+function startStatusCheck() {
+    if (statusCheckInterval) clearInterval(statusCheckInterval);
+    checkOnlineStatus(); // Check immediately on login
+    statusCheckInterval = setInterval(() => {
+        if (isLoggedIn) {
+            checkOnlineStatus();
+        }
+    }, 2000);
+}
+
+// Stop activity and status checks
+function stopActivityUpdates() {
+    if (activityUpdateInterval) {
+        clearInterval(activityUpdateInterval);
+        activityUpdateInterval = null;
+    }
+}
+
+function stopStatusCheck() {
+    if (statusCheckInterval) {
+        clearInterval(statusCheckInterval);
+        statusCheckInterval = null;
     }
 }
 
