@@ -117,6 +117,12 @@ function handleLogout() {
     attemptCounter.textContent = `Intentos restantes: ${attempts}`;
     hint.style.display = 'none';
     messagesArea.innerHTML = '';
+    currentUserBadge.textContent = 'Usuario';
+    if (onlineStatus) {
+        onlineStatus.classList.remove('online');
+        onlineStatus.classList.add('offline');
+        onlineStatus.querySelector('.online-text').textContent = 'Offline';
+    }
     loginContainer.style.display = 'flex';
     chatContainer.style.display = 'none';
     usernameInput.focus();
@@ -153,13 +159,6 @@ async function handleSendMessage() {
 
             // Update activity when message is sent
             updateActivity();
-
-            if (!document.hasFocus()) {
-                showNotification('Kurochat', {
-                    body: 'Mensaje enviado',
-                    tag: 'kurochat-message'
-                });
-            }
         }
     } catch (error) {
         console.error('Error enviando mensaje:', error);
