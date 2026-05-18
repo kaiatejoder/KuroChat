@@ -17,17 +17,16 @@
             <img src="src/KuroChat.svg" alt="Kurochat" class="logo">
             <h1>Kurochat</h1>
             <p class="subtitle">Acceso Restringido</p>
-            <div class="user-selector">
-                <label for="userSelect">¿Quién eres?</label>
-                <select id="userSelect">
-                    <option value="kai">Kai</option>
-                    <option value="costa">Costa</option>
-                </select>
-            </div>
+            <input
+                type="text"
+                id="usernameInput"
+                placeholder="Nombre de usuario"
+                autocomplete="off"
+            >
             <input
                 type="password"
                 id="passwordInput"
-                placeholder="Ingresa la contraseña"
+                placeholder="Contraseña"
                 autocomplete="off"
             >
             <button id="loginBtn">Ingresar</button>

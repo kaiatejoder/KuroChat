@@ -138,42 +138,22 @@ body > * {
     box-shadow: 0 0 12px rgba(160, 26, 71, 0.3);
 }
 
-.user-selector {
-    margin-bottom: 20px;
-}
-
-.user-selector label {
-    display: block;
-    font-size: 12px;
-    color: #888;
-    margin-bottom: 6px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-}
-
-#userSelect {
+#usernameInput {
     width: 100%;
-    padding: 10px 12px;
+    padding: 12px 16px;
     margin-bottom: 16px;
     border: 1px solid #333;
-    border-radius: 4px;
+    border-radius: 8px;
     background: #0f1419;
     color: #e0e0e0;
-    font-size: 14px;
-    font-family: 'Helvetica Now Display', sans-serif;
-    cursor: pointer;
+    font-size: 16px;
     transition: border-color 0.3s;
 }
 
-#userSelect:focus {
+#usernameInput:focus {
     outline: none;
     border-color: #a01a47;
-    box-shadow: 0 0 8px rgba(160, 26, 71, 0.2);
-}
-
-#userSelect option {
-    background: #0f1419;
-    color: #e0e0e0;
+    box-shadow: 0 0 12px rgba(160, 26, 71, 0.3);
 }
 
 #loginBtn {

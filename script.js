@@ -19,8 +19,8 @@ let localMessages = [];
 // ELEMENTOS DOM
 const loginContainer = document.getElementById('loginContainer');
 const chatContainer = document.getElementById('chatContainer');
+const usernameInput = document.getElementById('usernameInput');
 const passwordInput = document.getElementById('passwordInput');
-const userSelect = document.getElementById('userSelect');
 const loginBtn = document.getElementById('loginBtn');
 const logoutBtn = document.getElementById('logoutBtn');
 const messageInput = document.getElementById('messageInput');
@@ -33,6 +33,9 @@ const currentUserBadge = document.getElementById('currentUserBadge');
 
 // EVENT LISTENERS
 loginBtn.addEventListener('click', handleLogin);
+usernameInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') passwordInput.focus();
+});
 passwordInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') handleLogin();
 });
@@ -51,10 +54,18 @@ if (refreshBtn) {
 
 // FUNCIONES DE LOGIN
 function handleLogin() {
-    const input = passwordInput.value.trim();
+    const username = usernameInput.value.trim().toLowerCase();
+    const password = passwordInput.value.trim();
 
-    if (input === PASSWORD) {
-        currentUser = userSelect.value;
+    // Validate username
+    if (username !== 'kai' && username !== 'costa') {
+        usernameInput.style.borderColor = '#ff6b6b';
+        usernameInput.focus();
+        return;
+    }
+
+    if (password === PASSWORD) {
+        currentUser = username;
         isLoggedIn = true;
 
         // Update user badge with capitalized name
@@ -73,17 +84,18 @@ function handleLogin() {
     } else {
         attempts--;
         passwordInput.value = '';
+        passwordInput.style.borderColor = '#ff6b6b';
 
         if (attempts > 0) {
             attemptCounter.textContent = `Intentos restantes: ${attempts}`;
             attemptCounter.style.color = '#ff6b6b';
-            passwordInput.style.borderColor = '#ff6b6b';
         } else {
             attemptCounter.style.display = 'none';
             hint.textContent = HINT;
             hint.style.display = 'block';
             loginBtn.disabled = true;
             passwordInput.disabled = true;
+            usernameInput.disabled = true;
         }
     }
 }
@@ -94,6 +106,9 @@ function handleLogout() {
     stopActivityUpdates();
     stopStatusCheck();
     attempts = MAX_ATTEMPTS;
+    usernameInput.value = '';
+    usernameInput.style.borderColor = '#333';
+    usernameInput.disabled = false;
     passwordInput.value = '';
     passwordInput.style.borderColor = '#333';
     passwordInput.disabled = false;
@@ -104,7 +119,7 @@ function handleLogout() {
     messagesArea.innerHTML = '';
     loginContainer.style.display = 'flex';
     chatContainer.style.display = 'none';
-    passwordInput.focus();
+    usernameInput.focus();
 }
 
 // FUNCIONES DE CHAT
