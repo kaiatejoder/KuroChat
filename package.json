@@ -4,5 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "node api/messages.js"
+  },
+  "dependencies": {
+    "@vercel/analytics": "^2.0.1"
   }
 }
