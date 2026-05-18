@@ -300,7 +300,8 @@ async function checkOnlineStatus() {
         const response = await fetch(STATUS_API_URL);
         if (response.ok) {
             const status = await response.json();
-            const otherUserStatus = status['costa'];
+            const otherUser = currentUser === 'kai' ? 'costa' : 'kai';
+            const otherUserStatus = status[otherUser];
 
             if (onlineStatus) {
                 if (otherUserStatus && otherUserStatus.online) {
