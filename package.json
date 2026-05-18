@@ -1,11 +1,10 @@
 {
   "name": "kurochat",
   "version": "1.0.0",
+  "description": "Private messaging PWA",
   "type": "module",
-  "scripts": {
-    "dev": "node api/messages.js"
-  },
   "dependencies": {
+    "mongodb": "^6.0.0",
     "@vercel/analytics": "^2.0.1"
   }
 }
