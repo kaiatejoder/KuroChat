@@ -236,19 +236,21 @@ function renderMessage(message) {
     messagesArea.appendChild(messageEl);
 }
 
-// Load messages from localStorage or server
+// Load messages from localStorage (source of truth)
 function loadLocalMessages() {
     try {
         const saved = localStorage.getItem('kurochat_messages');
         if (saved) {
             localMessages = JSON.parse(saved);
+        } else {
+            localMessages = [];
         }
     } catch (error) {
         localMessages = [];
     }
 }
 
-// Save messages to localStorage
+// Save messages to localStorage (always source of truth)
 function saveLocalMessages() {
     try {
         localStorage.setItem('kurochat_messages', JSON.stringify(localMessages));
@@ -257,19 +259,28 @@ function saveLocalMessages() {
     }
 }
 
+// Sync with server and merge intelligently
 async function loadMessages() {
     try {
         const response = await fetch(API_URL);
-        const messages = await response.json();
+        const serverMessages = await response.json();
 
-        // Merge server messages with local messages
-        localMessages = messages.length > 0 ? messages : localMessages;
-        saveLocalMessages();
+        // Merge strategy: keep local messages, add any new ones from server
+        if (serverMessages && serverMessages.length > 0) {
+            const localIds = new Set(localMessages.map(m => m.id));
+            const newMessages = serverMessages.filter(m => !localIds.has(m.id));
+
+            // Add new server messages to local
+            if (newMessages.length > 0) {
+                localMessages = [...localMessages, ...newMessages];
+                saveLocalMessages();
+            }
+        }
 
         renderAllMessages();
     } catch (error) {
         console.error('Error cargando mensajes:', error);
-        // If server fails, use local messages
+        // If server fails, render local messages anyway
         renderAllMessages();
     }
 }
@@ -279,20 +290,23 @@ async function refreshMessages() {
     try {
         const response = await fetch(API_URL);
         if (response.ok) {
-            const messages = await response.json();
+            const serverMessages = await response.json();
 
-            // Check if there are new messages
-            if (messages.length > localMessages.length) {
-                localMessages = messages;
-                saveLocalMessages();
-                renderAllMessages();
+            // Merge strategy: local is source of truth, add new from server
+            if (serverMessages && serverMessages.length > 0) {
+                const localIds = new Set(localMessages.map(m => m.id));
+                const newMessages = serverMessages.filter(m => !localIds.has(m.id));
 
-                // Notify about new message
-                if (messages.length > 0) {
-                    const lastMessage = messages[messages.length - 1];
-                    if (lastMessage.user !== currentUser && isLoggedIn) {
+                if (newMessages.length > 0) {
+                    const lastNewMessage = newMessages[newMessages.length - 1];
+                    localMessages = [...localMessages, ...newMessages];
+                    saveLocalMessages();
+                    renderAllMessages();
+
+                    // Notify about new message from other user
+                    if (lastNewMessage.user !== currentUser && isLoggedIn) {
                         showNotification('Kurochat', {
-                            body: lastMessage.text,
+                            body: lastNewMessage.text,
                             tag: 'kurochat-message'
                         });
                     }

@@ -1,13 +1,14 @@
-// In-memory message storage for Vercel (filesystem is read-only)
-// Messages are stored in memory and will reset on function redeploy
+// In-memory message storage for Vercel
+// Messages persist in memory while the function is running
+// For persistent storage, client sends messages on each request
 let messages = [];
 
 function loadMessages() {
-    // In-memory storage - already loaded
+    // Messages stay in memory during the function lifecycle
 }
 
 function saveMessages() {
-    // In-memory storage - already in memory
+    // Automatic - messages array is updated in memory
 }
 
 export default function handler(req, res) {
