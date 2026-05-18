@@ -17,6 +17,13 @@
             <img src="src/KuroChat.svg" alt="Kurochat" class="logo">
             <h1>Kurochat</h1>
             <p class="subtitle">Acceso Restringido</p>
+            <div class="user-selector">
+                <label for="userSelect">¿Quién eres?</label>
+                <select id="userSelect">
+                    <option value="kai">Kai</option>
+                    <option value="costa">Costa</option>
+                </select>
+            </div>
             <input
                 type="password"
                 id="passwordInput"
@@ -35,6 +42,7 @@
             <div class="header-title">
                 <img src="src/KuroChat.svg" alt="Kurochat" class="logo-small">
                 <h2>Kurochat</h2>
+                <span id="currentUserBadge" class="user-badge">Kai</span>
                 <div id="onlineStatus" class="online-indicator offline">
                     <span class="online-dot"></span>
                     <span class="online-text">Offline</span>

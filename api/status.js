@@ -2,8 +2,8 @@
 // A user is considered online if their last activity was within the last 15 seconds
 
 let userActivity = {
-    yo: null,
-    other: null
+    kai: null,
+    costa: null
 };
 
 const ONLINE_TIMEOUT = 15000; // 15 seconds
@@ -22,24 +22,24 @@ export default function handler(req, res) {
     if (req.method === 'GET') {
         // Get online status of both users
         const now = Date.now();
-        const yoOnline = userActivity.yo && (now - userActivity.yo) < ONLINE_TIMEOUT;
-        const otherOnline = userActivity.other && (now - userActivity.other) < ONLINE_TIMEOUT;
+        const kaiOnline = userActivity.kai && (now - userActivity.kai) < ONLINE_TIMEOUT;
+        const costaOnline = userActivity.costa && (now - userActivity.costa) < ONLINE_TIMEOUT;
 
         res.status(200).json({
-            yo: {
-                online: yoOnline,
-                lastActivity: userActivity.yo
+            kai: {
+                online: kaiOnline,
+                lastActivity: userActivity.kai
             },
-            other: {
-                online: otherOnline,
-                lastActivity: userActivity.other
+            costa: {
+                online: costaOnline,
+                lastActivity: userActivity.costa
             }
         });
     } else if (req.method === 'POST' || req.method === 'PUT') {
         // Update user activity timestamp
         const { user } = req.body;
 
-        if (!user || (user !== 'yo' && user !== 'other')) {
+        if (!user || (user !== 'kai' && user !== 'costa')) {
             return res.status(400).json({ error: 'Invalid user' });
         }
 

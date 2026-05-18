@@ -10,7 +10,7 @@ const STATUS_API_URL = window.location.hostname === 'localhost'
 
 let attempts = MAX_ATTEMPTS;
 let isLoggedIn = false;
-let currentUser = 'yo';
+let currentUser = 'kai';
 let pollInterval = null;
 let statusCheckInterval = null;
 let activityUpdateInterval = null;
@@ -20,6 +20,7 @@ let localMessages = [];
 const loginContainer = document.getElementById('loginContainer');
 const chatContainer = document.getElementById('chatContainer');
 const passwordInput = document.getElementById('passwordInput');
+const userSelect = document.getElementById('userSelect');
 const loginBtn = document.getElementById('loginBtn');
 const logoutBtn = document.getElementById('logoutBtn');
 const messageInput = document.getElementById('messageInput');
@@ -28,6 +29,7 @@ const messagesArea = document.getElementById('messagesArea');
 const attemptCounter = document.getElementById('attemptCounter');
 const hint = document.getElementById('hint');
 const onlineStatus = document.getElementById('onlineStatus');
+const currentUserBadge = document.getElementById('currentUserBadge');
 
 // EVENT LISTENERS
 loginBtn.addEventListener('click', handleLogin);
@@ -52,7 +54,14 @@ function handleLogin() {
     const input = passwordInput.value.trim();
 
     if (input === PASSWORD) {
+        currentUser = userSelect.value;
         isLoggedIn = true;
+
+        // Update user badge with capitalized name
+        if (currentUserBadge) {
+            currentUserBadge.textContent = currentUser.charAt(0).toUpperCase() + currentUser.slice(1);
+        }
+
         loginContainer.style.display = 'none';
         chatContainer.style.display = 'flex';
         loadLocalMessages();
@@ -145,7 +154,7 @@ async function handleSendMessage() {
 
 function renderMessage(message) {
     const messageEl = document.createElement('div');
-    messageEl.className = `message ${message.user === 'yo' ? 'own' : 'other'}`;
+    messageEl.className = `message ${message.user === currentUser ? 'own' : 'other'}`;
 
     const time = new Date(message.timestamp).toLocaleTimeString('es-ES', {
         hour: '2-digit',
@@ -277,10 +286,11 @@ async function checkOnlineStatus() {
         const response = await fetch(STATUS_API_URL);
         if (response.ok) {
             const status = await response.json();
-            const otherUserStatus = currentUser === 'yo' ? status.other : status.yo;
+            const otherUser = currentUser === 'kai' ? 'costa' : 'kai';
+            const otherUserStatus = status[otherUser];
 
             if (onlineStatus) {
-                if (otherUserStatus.online) {
+                if (otherUserStatus && otherUserStatus.online) {
                     onlineStatus.classList.remove('offline');
                     onlineStatus.classList.add('online');
                     onlineStatus.querySelector('.online-text').textContent = 'Online';
