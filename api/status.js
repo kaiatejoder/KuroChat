@@ -6,7 +6,7 @@ let userActivity = {
     costa: null
 };
 
-const ONLINE_TIMEOUT = 15000; // 15 seconds
+const ONLINE_TIMEOUT = 45000; // 45 seconds
 
 export default function handler(req, res) {
     res.setHeader('Access-Control-Allow-Credentials', 'true');
