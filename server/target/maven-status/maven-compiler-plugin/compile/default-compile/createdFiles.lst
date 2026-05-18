@@ -1,0 +1,5 @@
+com\kurochat\Message.class
+com\kurochat\MessageRepository.class
+com\kurochat\KurochatApplication$1.class
+com\kurochat\KurochatApplication.class
+com\kurochat\MessageController.class

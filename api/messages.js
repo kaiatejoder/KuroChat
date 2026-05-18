@@ -1,27 +1,13 @@
-import fs from 'fs';
-import path from 'path';
-
+// In-memory message storage for Vercel (filesystem is read-only)
+// Messages are stored in memory and will reset on function redeploy
 let messages = [];
 
-const dbPath = path.join(process.cwd(), 'data.json');
-
 function loadMessages() {
-    try {
-        if (fs.existsSync(dbPath)) {
-            const data = fs.readFileSync(dbPath, 'utf-8');
-            messages = JSON.parse(data);
-        }
-    } catch (error) {
-        messages = [];
-    }
+    // In-memory storage - already loaded
 }
 
 function saveMessages() {
-    try {
-        fs.writeFileSync(dbPath, JSON.stringify(messages, null, 2), 'utf-8');
-    } catch (error) {
-        console.error('Error saving messages:', error);
-    }
+    // In-memory storage - already in memory
 }
 
 export default function handler(req, res) {

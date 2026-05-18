@@ -1,6 +1,10 @@
 {
-  "buildCommand": "npm install",
-  "outputDirectory": ".",
+  "rewrites": [
+    {
+      "source": "/api/messages",
+      "destination": "/api/messages.js"
+    }
+  ],
   "env": {
     "NODE_ENV": "production"
   }
