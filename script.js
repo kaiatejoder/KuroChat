@@ -8,6 +8,8 @@ const API_URL = window.location.hostname === 'localhost'
 let attempts = MAX_ATTEMPTS;
 let isLoggedIn = false;
 let currentUser = 'yo';
+let pollInterval = null;
+let localMessages = [];
 
 // ELEMENTOS DOM
 const loginContainer = document.getElementById('loginContainer');
@@ -33,6 +35,12 @@ messageInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') handleSendMessage();
 });
 
+// Refresh button (if it exists)
+const refreshBtn = document.getElementById('refreshBtn');
+if (refreshBtn) {
+    refreshBtn.addEventListener('click', refreshMessages);
+}
+
 // FUNCIONES DE LOGIN
 function handleLogin() {
     const input = passwordInput.value.trim();
@@ -41,7 +49,9 @@ function handleLogin() {
         isLoggedIn = true;
         loginContainer.style.display = 'none';
         chatContainer.style.display = 'flex';
+        loadLocalMessages();
         loadMessages();
+        startPolling();
         messageInput.focus();
     } else {
         attempts--;
@@ -63,6 +73,7 @@ function handleLogin() {
 
 function handleLogout() {
     isLoggedIn = false;
+    stopPolling();
     attempts = MAX_ATTEMPTS;
     passwordInput.value = '';
     passwordInput.style.borderColor = '#333';
@@ -99,6 +110,8 @@ async function handleSendMessage() {
 
         if (response.ok) {
             const message = await response.json();
+            localMessages.push(message);
+            saveLocalMessages();
             renderMessage(message);
             messageInput.value = '';
             messageInput.focus();
@@ -137,26 +150,96 @@ function renderMessage(message) {
     messagesArea.appendChild(messageEl);
 }
 
+// Load messages from localStorage or server
+function loadLocalMessages() {
+    try {
+        const saved = localStorage.getItem('kurochat_messages');
+        if (saved) {
+            localMessages = JSON.parse(saved);
+        }
+    } catch (error) {
+        localMessages = [];
+    }
+}
+
+// Save messages to localStorage
+function saveLocalMessages() {
+    try {
+        localStorage.setItem('kurochat_messages', JSON.stringify(localMessages));
+    } catch (error) {
+        console.error('Error saving to localStorage:', error);
+    }
+}
+
 async function loadMessages() {
     try {
         const response = await fetch(API_URL);
         const messages = await response.json();
-        messagesArea.innerHTML = '';
-        messages.forEach((msg) => renderMessage(msg));
-        scrollToBottom();
 
-        if (messages.length > 0) {
-            const lastMessage = messages[messages.length - 1];
-            if (lastMessage.user !== currentUser) {
-                showNotification('Kurochat', {
-                    body: lastMessage.text,
-                    tag: 'kurochat-message'
-                });
+        // Merge server messages with local messages
+        localMessages = messages.length > 0 ? messages : localMessages;
+        saveLocalMessages();
+
+        renderAllMessages();
+    } catch (error) {
+        console.error('Error cargando mensajes:', error);
+        // If server fails, use local messages
+        renderAllMessages();
+    }
+}
+
+// Refresh function to check for new messages
+async function refreshMessages() {
+    try {
+        const response = await fetch(API_URL);
+        if (response.ok) {
+            const messages = await response.json();
+
+            // Check if there are new messages
+            if (messages.length > localMessages.length) {
+                localMessages = messages;
+                saveLocalMessages();
+                renderAllMessages();
+
+                // Notify about new message
+                if (messages.length > 0) {
+                    const lastMessage = messages[messages.length - 1];
+                    if (lastMessage.user !== currentUser && isLoggedIn) {
+                        showNotification('Kurochat', {
+                            body: lastMessage.text,
+                            tag: 'kurochat-message'
+                        });
+                    }
+                }
             }
         }
     } catch (error) {
-        console.error('Error cargando mensajes:', error);
-        alert('Error al cargar los mensajes. Verifica que el servidor esté corriendo.');
+        console.error('Error refreshing messages:', error);
+    }
+}
+
+// Render all messages from local storage
+function renderAllMessages() {
+    messagesArea.innerHTML = '';
+    localMessages.forEach((msg) => renderMessage(msg));
+    scrollToBottom();
+}
+
+// Start auto-polling for new messages every 3 seconds
+function startPolling() {
+    if (pollInterval) clearInterval(pollInterval);
+    pollInterval = setInterval(() => {
+        if (isLoggedIn) {
+            refreshMessages();
+        }
+    }, 3000);
+}
+
+// Stop auto-polling
+function stopPolling() {
+    if (pollInterval) {
+        clearInterval(pollInterval);
+        pollInterval = null;
     }
 }
 
